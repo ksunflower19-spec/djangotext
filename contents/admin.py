@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Content, Comment, Reaction, Vote, Wishlist
+from .models import Content, Comment, Reaction, Vote, Wishlist, SiteConfig
 
 
 @admin.register(Content)
@@ -49,6 +49,15 @@ class ContentAdmin(admin.ModelAdmin):
     def reject_contents(self, request, queryset):
         updated = queryset.update(status='rejected')
         self.message_user(request, f'{updated}개의 콘텐츠가 거절되었습니다.')
+
+
+@admin.register(SiteConfig)
+class SiteConfigAdmin(admin.ModelAdmin):
+    def has_add_permission(self, request):
+        return not SiteConfig.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(Comment)

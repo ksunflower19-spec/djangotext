@@ -143,6 +143,38 @@ class Wishlist(models.Model):
         verbose_name_plural = '찜 목록'
 
 
+class SiteConfig(models.Model):
+    require_approval = models.BooleanField(
+        default=True, verbose_name='콘텐츠 업로드 시 관리자 승인 필요'
+    )
+    auto_approve_groups = models.CharField(
+        max_length=500, blank=True,
+        verbose_name='자동 승인 그룹 (쉼표로 구분)',
+        help_text='이 그룹에 속한 회원은 승인 없이 바로 공개됩니다. 예: 1기참여자, 운영팀',
+    )
+
+    class Meta:
+        verbose_name = '사이트 설정'
+        verbose_name_plural = '사이트 설정'
+
+    def __str__(self):
+        return '사이트 설정'
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def user_needs_approval(self, user):
+        if not self.require_approval:
+            return False
+        if user and user.project_group:
+            allowed = [g.strip() for g in self.auto_approve_groups.split(',') if g.strip()]
+            if user.project_group in allowed:
+                return False
+        return True
+
+
 class Purchase(models.Model):
     ITEMS = [
         ('jury_summon', '배심원 소환권'),

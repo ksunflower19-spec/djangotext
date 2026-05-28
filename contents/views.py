@@ -10,7 +10,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from accounts.models import Notification
-from .models import Content, Comment, Reaction, Vote, Wishlist, Purchase
+from .models import Content, Comment, Reaction, Vote, Wishlist, Purchase, SiteConfig
 from .forms import ContentForm, ContentEditForm, CommentForm, PasswordVerifyForm
 
 
@@ -153,8 +153,16 @@ def create(request):
             content.set_password(form.cleaned_data['password'])
             content.author = request.user
             content.author_email = form.cleaned_data.get('author_email', '')
+            config = SiteConfig.get()
+            if config.user_needs_approval(request.user):
+                content.status = 'pending'
+                msg = '해방일지가 등록되었습니다! 관리자 승인 후 아카이브에 공개됩니다.'
+            else:
+                content.status = 'approved'
+                msg = '해방일지가 등록되었습니다!'
+                request.user.add_points('upload')
             content.save()
-            messages.success(request, '해방일지가 등록되었습니다! 관리자 승인 후 아카이브에 공개됩니다.')
+            messages.success(request, msg)
             return redirect('home')
     else:
         form = ContentForm()

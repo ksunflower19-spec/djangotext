@@ -13,7 +13,7 @@
   --gray-700:#444444;
   --danger:  #CC3333;
   --font: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --nav-h: 56px;
+  --nav-h: 64px;
   --max-w: 1320px;
   --content-w: 720px;
   --gap: 1px;
@@ -41,35 +41,35 @@ ul, ol { list-style: none; }
 .site-header {
   position: sticky; top: 0; z-index: 100;
   background: var(--white);
-  border-bottom: 1px solid var(--gray-200);
   height: var(--nav-h);
 }
 .nav-container {
   max-width: var(--max-w); margin: 0 auto;
-  padding: 0 24px; height: 100%;
-  display: flex; align-items: center; gap: 32px;
+  padding: 0 32px; height: 100%;
+  display: flex; align-items: center; gap: 40px;
 }
 .nav-logo {
   white-space: nowrap; flex-shrink: 0;
   display: flex; align-items: center;
 }
-.nav-logo-img { height: 32px; width: auto; display: block; }
+.nav-logo-img { height: 28px; width: auto; display: block; }
 .nav-menu { display: flex; align-items: center; gap: 0; flex: 1; }
 .nav-links {
-  display: flex; align-items: center; gap: 2px; flex: 1;
+  display: flex; align-items: center; gap: 4px; flex: 1;
 }
 .nav-link {
   font-size: 13px; font-weight: 400;
-  color: var(--gray-700); padding: 6px 10px;
+  color: var(--gray-500); padding: 6px 12px;
   border-radius: 4px;
-  transition: color var(--t), background var(--t);
+  transition: color var(--t);
   white-space: nowrap;
 }
-.nav-link:hover { color: var(--black); background: var(--gray-100); }
+.nav-link:hover { color: var(--gray-700); }
+.nav-link.nav-active { color: var(--black); font-weight: 600; }
 .nav-link.nav-cta {
   font-weight: 500; color: var(--black);
   border: 1px solid var(--black); border-radius: 20px;
-  padding: 6px 14px; margin-left: 4px;
+  padding: 6px 16px; margin-left: 8px;
 }
 .nav-link.nav-cta:hover { background: var(--black); color: var(--white); }
 .nav-auth {
@@ -149,8 +149,8 @@ ul, ol { list-style: none; }
 .btn-primary.btn-large { font-size: 15px; padding: 12px 28px; }
 .btn-primary.btn-sm { font-size: 12px; padding: 6px 14px; }
 .btn-hero {
-  font-size: 15px; font-weight: 600;
-  padding: 13px 32px; border-radius: 30px;
+  font-size: 14px; font-weight: 600;
+  padding: 9px 24px; border-radius: 30px;
   background: var(--white); color: var(--black); border-color: var(--white);
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
@@ -282,18 +282,16 @@ ul, ol { list-style: none; }
 .mini-vote-fill { height: 100%; background: var(--white); }
 .mini-vote-label { white-space: nowrap; }
 
-/* Card lock overlay (비회원) */
-.card-lock {
-  position: absolute; inset: 0;
-  background: rgba(255,255,255,0.82);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 6px; opacity: 0; transition: opacity 0.2s;
-  color: var(--black);
+/* Card lock overlay (비회원) — 텍스트 없이 살짝 어둡게만 */
+.archive-card.card-guest:hover img { filter: blur(2px); transform: scale(1.04); }
+
+/* Wishlist overlay on exhibition cards */
+.card-wishlist-overlay {
+  position: absolute; bottom: 10px; right: 10px;
+  opacity: 0; transition: opacity 0.25s ease;
 }
-.card-lock span { font-size: 12px; font-weight: 500; }
-.archive-card.card-guest:hover .card-lock { opacity: 1; }
-.archive-card.card-guest img { filter: blur(0px); transition: filter 0.3s, transform 0.5s; }
-.archive-card.card-guest:hover img { filter: blur(3px); transform: scale(1.04); }
+.archive-card:hover .card-wishlist-overlay { opacity: 1; }
+.archive-card:hover .card-info { opacity: 1; transform: none; }
 
 /* ── Badges ───────────────────────────────────────────── */
 .badge {
