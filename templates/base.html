@@ -4,10 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}나의 반려쓰레기 해방일지{% endblock %}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
   {% load static %}
+  <link rel="icon" href="{% static 'img/favi.png' %}" type="image/png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   {% block extra_head %}{% endblock %}
 </head>
@@ -21,7 +20,9 @@
     </a>
 
     <button class="nav-toggle" id="navToggle" aria-label="메뉴">
-      <span></span><span></span><span></span>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
+      </svg>
     </button>
 
     <div class="nav-menu" id="navMenu">
@@ -29,10 +30,33 @@
         <a href="{% url 'home' %}" class="nav-link">아카이브</a>
         <a href="{% url 'temporary' %}" class="nav-link">임시저장소</a>
         <a href="{% url 'exhibition' %}" class="nav-link">실물전시</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'store_index' %}" class="nav-link">상점</a>
+        {% endif %}
+        {% if user.is_staff %}
+        <a href="{% url 'noticeboard_index' %}" class="nav-link">운영게시판</a>
+        {% endif %}
         <a href="{% url 'create_content' %}" class="nav-link nav-cta">해방일지 기록하기</a>
       </div>
       <div class="nav-auth">
         {% if user.is_authenticated %}
+          {% if user.level_label %}
+          <span class="lv">{{ user.level_label }}</span>
+          {% endif %}
+          {% if unread_notification_count > 0 %}
+          <a href="{% url 'notifications' %}" class="nav-bell has-badge" aria-label="알림">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+            </svg>
+            <span class="bell-badge">{{ unread_notification_count }}</span>
+          </a>
+          {% else %}
+          <a href="{% url 'notifications' %}" class="nav-bell" aria-label="알림">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+            </svg>
+          </a>
+          {% endif %}
           <a href="{% url 'profile' %}" class="nav-link nav-user">
             <span class="user-points">{{ user.points }}pt</span>
             {{ user.username }}
@@ -52,7 +76,11 @@
   {% for message in messages %}
   <div class="message message-{{ message.tags }}">
     {{ message }}
-    <button class="message-close" onclick="this.parentElement.remove()">×</button>
+    <button class="message-close" onclick="this.parentElement.remove()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
   </div>
   {% endfor %}
 </div>

@@ -13,7 +13,13 @@
     </div>
 
     <div class="photo-guide">
-      <h3 class="guide-title">📸 사진 촬영 가이드</h3>
+      <h3 class="guide-title">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z"/>
+        </svg>
+        사진 촬영 가이드
+      </h3>
       <ul class="guide-list">
         <li>흰색 또는 밝은 단색 배경 앞에 물건을 놓아주세요</li>
         <li>물건의 정면이 잘 보이도록 촬영해주세요</li>
@@ -37,7 +43,9 @@
         <label class="form-label">{{ form.image.label }} <span class="required">*</span></label>
         <div class="file-upload-area" id="fileUploadArea">
           <div class="file-upload-placeholder" id="uploadPlaceholder">
-            <span class="upload-icon">📷</span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="32" height="32">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+            </svg>
             <p>클릭하거나 파일을 드래그하세요</p>
             <p class="upload-hint">흰 배경, 정면 촬영 권장</p>
           </div>
@@ -70,16 +78,16 @@
         <label class="form-label">{{ form.category.label }} <span class="required">*</span></label>
         <div class="radio-group">
           {% for choice in form.category %}
-          <label class="radio-option">
+          <label class="radio-card">
             {{ choice.tag }}
-            <span class="radio-label">
-              <span class="radio-title">{{ choice.choice_label }}</span>
+            <span class="radio-card-body">
+              <span class="radio-card-title">{{ choice.choice_label }}</span>
               {% if choice.data.value == 'immediate_trash' %}
-              <span class="radio-desc">물건을 직접 처분하고 이야기만 남겨요</span>
+              <span class="radio-card-desc">물건을 직접 처분하고 이야기만 남겨요</span>
               {% elif choice.data.value == 'immediate_exhibition' %}
-              <span class="radio-desc">물건을 오프라인 전시에 기증하고 판매 수익을 기부해요</span>
+              <span class="radio-card-desc">물건을 오프라인 전시에 기증하고 판매 수익을 기부해요</span>
               {% elif choice.data.value == 'temporary_storage' %}
-              <span class="radio-desc">아직 결정 못했어요. 사람들의 의견을 들어볼게요</span>
+              <span class="radio-card-desc">아직 결정 못했어요. 사람들의 의견을 들어볼게요</span>
               {% endif %}
             </span>
           </label>
@@ -112,6 +120,15 @@
           {{ form.confirm_password }}
           {% if form.confirm_password.errors %}<p class="field-error">{{ form.confirm_password.errors.0 }}</p>{% endif %}
         </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.author_email.id_for_label }}">
+          {{ form.author_email.label }}
+        </label>
+        <p class="field-hint">투표가 {{ VOTE_NOTIFY_THRESHOLD }}개를 달성하면 이메일로 알려드립니다.</p>
+        {{ form.author_email }}
+        {% if form.author_email.errors %}<p class="field-error">{{ form.author_email.errors.0 }}</p>{% endif %}
       </div>
 
       <div class="form-submit">

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}알림 — 나의 반려쓰레기 해방일지{% endblock %}
+
+{% block content %}
+<div class="notifications-page">
+  <div class="notifications-inner">
+    <h1 class="notifications-title">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+      </svg>
+      알림
+    </h1>
+
+    {% if notifications %}
+    <ul class="notification-list">
+      {% for n in notifications %}
+      <li class="notification-item">
+        <a href="{{ n.link }}" class="notification-link">
+          <div class="notification-content">
+            <p class="notification-msg">{{ n.message }}</p>
+            <time class="notification-time">{{ n.created_at|date:"Y.m.d H:i" }}</time>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16" class="notification-arrow">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+          </svg>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="empty-icon-svg" width="48" height="48">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+      </svg>
+      <p class="empty-title">새 알림이 없습니다</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

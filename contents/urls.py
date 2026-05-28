@@ -13,4 +13,7 @@ urlpatterns = [
     path('content/<int:pk>/reaction/', views.toggle_reaction, name='toggle_reaction'),
     path('content/<int:pk>/vote/', views.cast_vote, name='cast_vote'),
     path('content/<int:pk>/wishlist/', views.toggle_wishlist, name='toggle_wishlist'),
+    path('content/<int:pk>/jury-summon/', views.use_jury_summon, name='use_jury_summon'),
+    path('store/', views.store_index, name='store_index'),
+    path('store/buy/', views.buy_item, name='buy_item'),
 ]

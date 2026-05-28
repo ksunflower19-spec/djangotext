@@ -39,10 +39,10 @@
         <label class="form-label">{{ form.category.label }}</label>
         <div class="radio-group">
           {% for choice in form.category %}
-          <label class="radio-option">
+          <label class="radio-card">
             {{ choice.tag }}
-            <span class="radio-label">
-              <span class="radio-title">{{ choice.choice_label }}</span>
+            <span class="radio-card-body">
+              <span class="radio-card-title">{{ choice.choice_label }}</span>
             </span>
           </label>
           {% endfor %}

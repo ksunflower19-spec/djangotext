@@ -1,4 +1,4 @@
-// 모바일 네비게이션 토글
+// Mobile nav toggle
 const navToggle = document.getElementById('navToggle');
 const navMenu = document.getElementById('navMenu');
 
@@ -7,7 +7,6 @@ if (navToggle && navMenu) {
     navMenu.classList.toggle('open');
   });
 
-  // 외부 클릭 시 메뉴 닫기
   document.addEventListener('click', e => {
     if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
       navMenu.classList.remove('open');
@@ -15,7 +14,7 @@ if (navToggle && navMenu) {
   });
 }
 
-// 파일 업로드 영역 클릭 처리
+// File upload area click / drag-drop
 const uploadArea = document.getElementById('fileUploadArea');
 if (uploadArea) {
   const fileInput = uploadArea.querySelector('input[type=file]');
@@ -23,14 +22,14 @@ if (uploadArea) {
 
   uploadArea.addEventListener('dragover', e => {
     e.preventDefault();
-    uploadArea.style.borderColor = 'var(--accent)';
+    uploadArea.classList.add('drag-over');
   });
   uploadArea.addEventListener('dragleave', () => {
-    uploadArea.style.borderColor = '';
+    uploadArea.classList.remove('drag-over');
   });
   uploadArea.addEventListener('drop', e => {
     e.preventDefault();
-    uploadArea.style.borderColor = '';
+    uploadArea.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
     if (file && fileInput) {
       const dt = new DataTransfer();
@@ -41,11 +40,11 @@ if (uploadArea) {
   });
 }
 
-// 메시지 자동 닫기 (5초)
+// Auto-dismiss flash messages after 5s
 document.querySelectorAll('.message').forEach(msg => {
   setTimeout(() => {
     msg.style.opacity = '0';
-    msg.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => msg.remove(), 500);
+    msg.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => msg.remove(), 400);
   }, 5000);
 });

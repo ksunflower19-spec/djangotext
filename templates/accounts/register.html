@@ -43,10 +43,30 @@
         {% if form.password2.errors %}<p class="field-error">{{ form.password2.errors.0 }}</p>{% endif %}
       </div>
 
-      <div class="register-benefits">
-        <p>🎁 가입 시 10 포인트 지급</p>
-        <p>✍️ 댓글 작성, 반응, 찜하기 가능</p>
-        <p>⭐ 활동할수록 포인트가 쌓여요</p>
+      <div class="form-group">
+        <label class="form-label">회원 유형</label>
+        <div class="radio-group member-type-group">
+          {% for choice in form.member_type %}
+          <label class="radio-card">
+            {{ choice.tag }}
+            <span class="radio-card-body">
+              <span class="radio-card-title">{{ choice.choice_label }}</span>
+              {% if choice.data.value == 'regular' %}
+              <span class="radio-card-desc">일반 회원으로 가입합니다</span>
+              {% elif choice.data.value == 'project' %}
+              <span class="radio-card-desc">프로젝트 참여 코드로 가입합니다</span>
+              {% endif %}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+        {% if form.member_type.errors %}<p class="field-error">{{ form.member_type.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="form-group" id="projectCodeGroup" style="display:none;">
+        <label class="form-label" for="{{ form.project_code.id_for_label }}">프로젝트 참여 코드</label>
+        {{ form.project_code }}
+        {% if form.project_code.errors %}<p class="field-error">{{ form.project_code.errors.0 }}</p>{% endif %}
       </div>
 
       <button type="submit" class="btn-primary btn-full">가입하기</button>
@@ -57,4 +77,23 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const memberTypeInputs = document.querySelectorAll('input[name="member_type"]');
+const projectCodeGroup = document.getElementById('projectCodeGroup');
+
+function toggleProjectCode() {
+  const selected = document.querySelector('input[name="member_type"]:checked');
+  if (selected && selected.value === 'project') {
+    projectCodeGroup.style.display = 'block';
+  } else {
+    projectCodeGroup.style.display = 'none';
+  }
+}
+
+memberTypeInputs.forEach(input => input.addEventListener('change', toggleProjectCode));
+toggleProjectCode();
+</script>
 {% endblock %}

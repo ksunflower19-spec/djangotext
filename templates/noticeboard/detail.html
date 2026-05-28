@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }} — 운영게시판{% endblock %}
+
+{% block content %}
+<div class="board-page">
+  <div class="board-inner">
+
+    <article class="board-detail">
+      <div class="board-detail-header">
+        {% if post.is_pinned %}
+        <span class="board-pin-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+            <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd"/>
+          </svg>
+          고정
+        </span>
+        {% endif %}
+        <h1 class="board-detail-title">{{ post.title }}</h1>
+        <div class="board-detail-meta">
+          <span>{{ post.author.username }}</span>
+          <time>{{ post.created_at|date:"Y.m.d H:i" }}</time>
+        </div>
+      </div>
+
+      <div class="board-detail-body">
+        {{ post.body|linebreaks }}
+      </div>
+    </article>
+
+    <!-- 댓글 -->
+    <div class="board-comments">
+      <h3 class="board-comments-title">댓글 {{ post.comments.count }}</h3>
+      {% for c in comments %}
+      <div class="comment-item">
+        <div class="comment-header">
+          <span class="comment-author">{{ c.author.username }}</span>
+          <time class="comment-date">{{ c.created_at|date:"Y.m.d H:i" }}</time>
+        </div>
+        <p class="comment-text">{{ c.text }}</p>
+      </div>
+      {% empty %}
+      <p class="no-comments">아직 댓글이 없습니다.</p>
+      {% endfor %}
+
+      <form method="post" class="comment-form">
+        {% csrf_token %}
+        {{ comment_form.text }}
+        <button type="submit" class="btn-primary comment-submit">댓글 남기기</button>
+      </form>
+    </div>
+
+    <div class="detail-actions">
+      <a href="{% url 'noticeboard_index' %}" class="btn-outline">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+        </svg>
+        목록으로
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from pathlib import Path
 from decouple import config, Csv
 import dj_database_url
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -17,6 +18,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'contents',
+    'noticeboard',
 ]
 
 MIDDLEWARE = [
@@ -43,6 +45,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'contents.context_processors.unread_notifications',
             ],
         },
     },
@@ -50,7 +53,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'pet_trash.wsgi.application'
 
-import os
 os.makedirs(BASE_DIR / 'media', exist_ok=True)
 
 DATABASES = {
@@ -93,3 +95,18 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 이메일 설정 (Render 환경변수로 지정)
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@pet-trash.com')
+
+# 상점 아이템 가격
+STORE_ITEM_PRICE = 1000
+
+# 투표 알림 기준
+VOTE_NOTIFY_THRESHOLD = 49

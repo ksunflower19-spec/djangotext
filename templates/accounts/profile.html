@@ -8,18 +8,58 @@
   <div class="profile-header">
     <div class="profile-avatar">{{ profile_user.username|first|upper }}</div>
     <div class="profile-info">
-      <h1 class="profile-name">{{ profile_user.username }}</h1>
+      <div class="profile-name-row">
+        <h1 class="profile-name">{{ profile_user.username }}</h1>
+        {% if profile_user.level_label %}
+        <span class="lv">{{ profile_user.level_label }}</span>
+        {% endif %}
+      </div>
       <span class="profile-badge badge-{{ profile_user.member_type }}">
         {{ profile_user.get_member_type_display }}
       </span>
-      <div class="profile-points">
-        <span class="points-value">{{ profile_user.points }}</span>
-        <span class="points-label">포인트</span>
+      <div class="profile-points-row">
+        <div class="profile-points-item">
+          <span class="points-value">{{ profile_user.points }}</span>
+          <span class="points-label">사용 가능 포인트</span>
+        </div>
+        <div class="profile-points-divider"></div>
+        <div class="profile-points-item">
+          <span class="points-value">{{ profile_user.total_points }}</span>
+          <span class="points-label">누적 포인트 (레벨 기준)</span>
+        </div>
+        <div class="profile-points-divider"></div>
+        <div class="profile-points-item">
+          <span class="points-value">{{ profile_user.level }}</span>
+          <span class="points-label">현재 레벨</span>
+        </div>
       </div>
+      <div class="level-progress">
+        <div class="level-progress-bar" style="width: {{ profile_user.level_progress }}%"></div>
+      </div>
+      <p class="level-next">누적 1000pt마다 레벨 업 (현재 단계 {{ profile_user.level_progress }}%)</p>
     </div>
   </div>
 
   <div class="profile-body">
+
+    <!-- 보유 아이템 -->
+    {% if purchases %}
+    <section class="profile-section">
+      <h2 class="profile-section-title">보유 아이템</h2>
+      <div class="purchase-list">
+        {% for p in purchases %}
+        <div class="purchase-item">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="18" height="18">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+          </svg>
+          {{ p.get_item_type_display }}
+        </div>
+        {% endfor %}
+      </div>
+      <a href="{% url 'store_index' %}" class="btn-outline btn-sm">상점 방문하기</a>
+    </section>
+    {% endif %}
+
     <section class="profile-section">
       <h2 class="profile-section-title">내가 기록한 해방일지</h2>
       {% if contents %}
@@ -31,9 +71,9 @@
           </div>
           <div class="pci-info">
             <span class="pci-status">
-              {% if content.status == 'pending' %}⏳ 승인 대기
-              {% elif content.status == 'approved' %}✅ 공개 중
-              {% else %}❌ 거절됨{% endif %}
+              {% if content.status == 'pending' %}대기 중
+              {% elif content.status == 'approved' %}공개 중
+              {% else %}거절됨{% endif %}
             </span>
             <p class="pci-title">{{ content.title }}</p>
             <p class="pci-date">{{ content.created_at|date:"Y.m.d" }}</p>
@@ -52,7 +92,9 @@
         {% for ph in recent_points %}
         <div class="point-item">
           <span class="point-action">{{ ph.get_action_display }}</span>
-          <span class="point-earned">+{{ ph.points }}pt</span>
+          <span class="point-earned {% if ph.points < 0 %}point-spent{% endif %}">
+            {% if ph.points >= 0 %}+{% endif %}{{ ph.points }}pt
+          </span>
           <span class="point-date">{{ ph.created_at|date:"m.d" }}</span>
         </div>
         {% empty %}

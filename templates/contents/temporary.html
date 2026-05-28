@@ -19,59 +19,52 @@
   </div>
 
   {% if contents %}
-  <div class="archive-grid archive-grid-wide">
+  <div class="archive-grid">
     {% for content in contents %}
-    <div class="archive-card-wide">
-      <a href="{% url 'detail' content.pk %}" class="card-img-link">
-        <div class="card-img-wrap">
-          <img src="{{ content.image.url }}" alt="{{ content.title }}" loading="lazy">
-        </div>
-      </a>
-      <div class="card-body">
-        <h3 class="card-title-wide">
-          <a href="{% url 'detail' content.pk %}">{{ content.title }}</a>
-        </h3>
-        <p class="card-nickname-wide">by {{ content.nickname }}</p>
-        <p class="card-excerpt-wide">{{ content.story|truncatechars:120 }}</p>
-
-        <div class="vote-bar">
-          {% with total=content.throw_vote_count|add:content.keep_vote_count %}
-          {% if total > 0 %}
-          <div class="vote-progress">
-            <div class="vote-fill-throw" style="width:{% widthratio content.throw_vote_count total 100 %}%"></div>
+    {% if user.is_authenticated %}
+    <a href="{% url 'detail' content.pk %}" class="archive-card">
+    {% else %}
+    <a href="{% url 'login' %}?next={% url 'detail' content.pk %}" class="archive-card card-guest">
+    {% endif %}
+      <div class="card-img-wrap">
+        <img src="{{ content.image.url }}" alt="{{ content.title }}" loading="lazy">
+        <div class="card-overlay">
+          <div class="card-info">
+            <h3 class="card-title">{{ content.title }}</h3>
+            <p class="card-nick">by {{ content.nickname }}</p>
+            <div class="card-vote-bar">
+              {% with t=content.throw_vote_count k=content.keep_vote_count total=content.throw_vote_count|add:content.keep_vote_count %}
+              {% if total > 0 %}
+              <div class="mini-vote-row">
+                <span class="mini-vote-label">버려라 {{ t }}</span>
+                <div class="mini-vote-track">
+                  <div class="mini-vote-fill" style="width:{% widthratio t total 100 %}%"></div>
+                </div>
+                <span class="mini-vote-label">{{ k }} 말아라</span>
+              </div>
+              {% endif %}
+              {% endwith %}
+            </div>
+            {% if not user.is_authenticated %}
+            <div class="card-lock">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+              </svg>
+              <span>로그인 후 투표하기</span>
+            </div>
+            {% endif %}
           </div>
-          {% endif %}
-          {% endwith %}
-          <div class="vote-counts">
-            <span class="vote-label-throw">🗑️ 버려라 {{ content.throw_vote_count }}</span>
-            <span class="vote-label-keep">🤗 말아라 {{ content.keep_vote_count }}</span>
-          </div>
         </div>
-
-        {% if user.is_authenticated %}
-        <div class="quick-vote">
-          <button class="qvote-btn {% if user_votes|get_item:content.pk == 'throw' %}active-throw{% endif %}"
-                  data-vote="throw" data-pk="{{ content.pk }}">
-            🗑️ 버려라
-          </button>
-          <button class="qvote-btn {% if user_votes|get_item:content.pk == 'keep' %}active-keep{% endif %}"
-                  data-vote="keep" data-pk="{{ content.pk }}">
-            🤗 말아라
-          </button>
-        </div>
-        {% else %}
-        <a href="{% url 'login' %}?next={% url 'temporary' %}" class="vote-login-hint">
-          로그인하고 투표하기 →
-        </a>
-        {% endif %}
       </div>
-    </div>
+    </a>
     {% endfor %}
   </div>
 
   {% else %}
   <div class="empty-state">
-    <p class="empty-icon">🗄️</p>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="empty-icon-svg" width="48" height="48">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/>
+    </svg>
     <p class="empty-title">아직 임시보관 중인 물건이 없어요</p>
     <a href="{% url 'create_content' %}" class="btn-primary">해방일지 기록하기</a>
   </div>
@@ -80,27 +73,29 @@
 {% endblock %}
 
 {% block extra_js %}
+{% if user.is_authenticated %}
 <script>
 const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
 
-document.querySelectorAll('.qvote-btn').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const res = await fetch(`/content/${btn.dataset.pk}/vote/`, {
+document.querySelectorAll('.archive-card').forEach(card => {
+  card.addEventListener('click', async (e) => {
+    const voteBtn = e.target.closest('.qvote-btn');
+    if (!voteBtn) return;
+    e.preventDefault();
+    const res = await fetch(`/content/${voteBtn.dataset.pk}/vote/`, {
       method: 'POST',
       headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
-      body: `vote_type=${btn.dataset.vote}`
+      body: `vote_type=${voteBtn.dataset.vote}`
     });
     if (res.ok) {
       const data = await res.json();
-      const card = btn.closest('.archive-card-wide');
       card.querySelectorAll('.qvote-btn').forEach(b => b.classList.remove('active-throw', 'active-keep'));
       if (data.current_vote) {
         card.querySelector(`[data-vote="${data.current_vote}"]`)?.classList.add(`active-${data.current_vote}`);
       }
-      card.querySelector('.vote-label-throw').textContent = `🗑️ 버려라 ${data.throw_count}`;
-      card.querySelector('.vote-label-keep').textContent = `🤗 말아라 ${data.keep_count}`;
     }
   });
 });
 </script>
+{% endif %}
 {% endblock %}
