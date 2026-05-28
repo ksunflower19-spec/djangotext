@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}수정 인증 — 나의 반려쓰레기 해방일지{% endblock %}
+
+{% block content %}
+<div class="form-page form-page-narrow">
+  <div class="form-page-inner">
+    <div class="form-header">
+      <h1 class="form-title">수정 인증</h1>
+      <p class="form-desc">「{{ content.title }}」을(를) 수정하려면<br>등록 시 설정한 비밀번호를 입력해주세요.</p>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="verify_password" value="1">
+
+      {% if messages %}
+      {% for message in messages %}
+      <div class="form-error-banner">{{ message }}</div>
+      {% endfor %}
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ verify_form.password.id_for_label }}">
+          비밀번호
+        </label>
+        {{ verify_form.password }}
+      </div>
+
+      <div class="form-submit">
+        <button type="submit" class="btn-primary">확인</button>
+        <a href="{% url 'home' %}" class="btn-outline">취소</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

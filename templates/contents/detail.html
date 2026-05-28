@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ content.title }} — 나의 반려쓰레기 해방일지{% endblock %}
+
+{% block content %}
+<article class="detail-page">
+
+  <div class="detail-hero">
+    <img src="{{ content.image.url }}" alt="{{ content.title }}" class="detail-image">
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-meta-top">
+      <span class="badge badge-{{ content.category }}">{{ content.get_category_display }}</span>
+      <time class="detail-date">{{ content.created_at|date:"Y년 m월 d일" }}</time>
+    </div>
+
+    <h1 class="detail-title">{{ content.title }}</h1>
+    <p class="detail-author">by {{ content.nickname }}</p>
+
+    <div class="detail-story">
+      {{ content.story|linebreaks }}
+    </div>
+
+    <!-- 반응 섹션 -->
+    <div class="reactions-section">
+      <h3 class="reactions-title">이 이야기에 공감하시나요?</h3>
+      <div class="reactions-row">
+        {% if user.is_authenticated %}
+        <button class="reaction-btn {% if 'empathy' in user_reactions %}active{% endif %}"
+                data-reaction="empathy" data-pk="{{ content.pk }}">
+          <span class="reaction-emoji">🫂</span>
+          <span class="reaction-label">공감</span>
+          <span class="reaction-count" id="count-empathy">{{ content.empathy_count }}</span>
+        </button>
+        <button class="reaction-btn {% if 'sad' in user_reactions %}active{% endif %}"
+                data-reaction="sad" data-pk="{{ content.pk }}">
+          <span class="reaction-emoji">😢</span>
+          <span class="reaction-label">슬픔</span>
+          <span class="reaction-count" id="count-sad">{{ content.sad_count }}</span>
+        </button>
+        <button class="reaction-btn {% if 'angry' in user_reactions %}active{% endif %}"
+                data-reaction="angry" data-pk="{{ content.pk }}">
+          <span class="reaction-emoji">😤</span>
+          <span class="reaction-label">화남</span>
+          <span class="reaction-count" id="count-angry">{{ content.angry_count }}</span>
+        </button>
+        {% else %}
+        <div class="reactions-guest">
+          <span>🫂 {{ content.empathy_count }}</span>
+          <span>😢 {{ content.sad_count }}</span>
+          <span>😤 {{ content.angry_count }}</span>
+          <a href="{% url 'login' %}?next={{ request.path }}" class="reaction-login-hint">로그인하면 반응을 남길 수 있어요</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- 임시보관 투표 -->
+    {% if content.category == 'temporary_storage' %}
+    <div class="vote-section">
+      <h3 class="vote-title">이 물건, 어떻게 생각하세요?</h3>
+      <p class="vote-desc">관리자가 인스타그램 스토리에 올려 여러 사람들의 판결을 받을 예정이에요. 여기서도 의견을 남겨보세요!</p>
+      {% if user.is_authenticated %}
+      <div class="vote-buttons">
+        <button class="vote-btn {% if user_vote == 'throw' %}active-throw{% endif %}"
+                data-vote="throw" data-pk="{{ content.pk }}">
+          🗑️ 버려라
+          <span class="vote-count" id="count-throw">{{ content.throw_vote_count }}</span>
+        </button>
+        <button class="vote-btn {% if user_vote == 'keep' %}active-keep{% endif %}"
+                data-vote="keep" data-pk="{{ content.pk }}">
+          🤗 아직은 말아라
+          <span class="vote-count" id="count-keep">{{ content.keep_vote_count }}</span>
+        </button>
+      </div>
+      {% else %}
+      <div class="vote-guest">
+        <p>🗑️ 버려라 {{ content.throw_vote_count }}표 &nbsp;|&nbsp; 🤗 말아라 {{ content.keep_vote_count }}표</p>
+        <a href="{% url 'login' %}?next={{ request.path }}">로그인하고 투표하기</a>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- 실물전시 찜하기 -->
+    {% if content.category == 'immediate_exhibition' %}
+    <div class="wishlist-section">
+      <h3 class="wishlist-title">오프라인 전시 구매 우선권</h3>
+      <p class="wishlist-desc">
+        이 물건은 오프라인 전시에서 판매될 예정입니다. 찜한 분들께 구매 우선권이 주어집니다.
+        (최대 3명, 현재 {{ content.wishlist_count }}명 찜)
+      </p>
+      {% if user.is_authenticated %}
+        {% if content.wishlist_count >= 3 and not user_wishlisted %}
+        <button class="wishlist-btn disabled" disabled>❤️ 찜 마감 (3/3)</button>
+        {% else %}
+        <button class="wishlist-btn {% if user_wishlisted %}active{% endif %}"
+                data-pk="{{ content.pk }}" id="wishlistBtn">
+          {% if user_wishlisted %}❤️ 찜 취소{% else %}🤍 찜하기{% endif %}
+          (<span id="wishlist-count">{{ content.wishlist_count }}</span>/3)
+        </button>
+        {% endif %}
+      {% else %}
+      <a href="{% url 'login' %}?next={{ request.path }}" class="wishlist-btn">
+        🤍 찜하기 (로그인 필요)
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- 댓글 섹션 -->
+    <div class="comments-section">
+      <h3 class="comments-title">댓글 <span>{{ content.comments.count }}</span></h3>
+
+      {% for comment in comments %}
+      <div class="comment-item">
+        <div class="comment-header">
+          <span class="comment-author">익명</span>
+          <time class="comment-date">{{ comment.created_at|date:"Y.m.d H:i" }}</time>
+        </div>
+        <p class="comment-text">{{ comment.text }}</p>
+      </div>
+      {% empty %}
+      <p class="no-comments">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</p>
+      {% endfor %}
+
+      {% if user.is_authenticated %}
+      <form class="comment-form" method="post" action="{% url 'add_comment' content.pk %}">
+        {% csrf_token %}
+        {{ comment_form.text }}
+        <button type="submit" class="btn-primary comment-submit">댓글 남기기</button>
+      </form>
+      {% else %}
+      <div class="comment-login">
+        <a href="{% url 'login' %}?next={{ request.path %}}" class="btn-outline">로그인하고 댓글 남기기</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="detail-actions">
+      <a href="{% url 'home' %}" class="btn-outline">← 아카이브로 돌아가기</a>
+      <a href="{% url 'edit_verify' content.pk %}" class="btn-text">수정하기</a>
+    </div>
+  </div>
+
+</article>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+// 반응 버튼
+document.querySelectorAll('.reaction-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const res = await fetch(`/content/${btn.dataset.pk}/reaction/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `reaction_type=${btn.dataset.reaction}`
+    });
+    if (res.ok) {
+      const data = await res.json();
+      btn.classList.toggle('active', data.active);
+      document.getElementById('count-empathy').textContent = data.counts.empathy;
+      document.getElementById('count-sad').textContent = data.counts.sad;
+      document.getElementById('count-angry').textContent = data.counts.angry;
+    }
+  });
+});
+
+// 투표 버튼
+document.querySelectorAll('.vote-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const res = await fetch(`/content/${btn.dataset.pk}/vote/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `vote_type=${btn.dataset.vote}`
+    });
+    if (res.ok) {
+      const data = await res.json();
+      document.querySelectorAll('.vote-btn').forEach(b => {
+        b.classList.remove('active-throw', 'active-keep');
+      });
+      if (data.current_vote) {
+        document.querySelector(`[data-vote="${data.current_vote}"]`)
+          ?.classList.add(`active-${data.current_vote}`);
+      }
+      if (document.getElementById('count-throw'))
+        document.getElementById('count-throw').textContent = data.throw_count;
+      if (document.getElementById('count-keep'))
+        document.getElementById('count-keep').textContent = data.keep_count;
+    }
+  });
+});
+
+// 찜하기 버튼
+const wishlistBtn = document.getElementById('wishlistBtn');
+if (wishlistBtn) {
+  wishlistBtn.addEventListener('click', async () => {
+    const res = await fetch(`/content/${wishlistBtn.dataset.pk}/wishlist/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF},
+    });
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('wishlist-count').textContent = data.wishlist_count;
+      if (data.wishlisted) {
+        wishlistBtn.classList.add('active');
+        wishlistBtn.innerHTML = `❤️ 찜 취소 (<span id="wishlist-count">${data.wishlist_count}</span>/3)`;
+      } else {
+        wishlistBtn.classList.remove('active');
+        wishlistBtn.innerHTML = `🤍 찜하기 (<span id="wishlist-count">${data.wishlist_count}</span>/3)`;
+      }
+      if (!data.can_add && !data.wishlisted) {
+        wishlistBtn.disabled = true;
+        wishlistBtn.classList.add('disabled');
+        wishlistBtn.textContent = `❤️ 찜 마감 (3/3)`;
+      }
+    } else {
+      const err = await res.json();
+      alert(err.error);
+    }
+  });
+}
+</script>
+{% endblock %}

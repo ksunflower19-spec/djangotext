@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}마이페이지 — 나의 반려쓰레기 해방일지{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+  <div class="profile-header">
+    <div class="profile-avatar">{{ profile_user.username|first|upper }}</div>
+    <div class="profile-info">
+      <h1 class="profile-name">{{ profile_user.username }}</h1>
+      <span class="profile-badge badge-{{ profile_user.member_type }}">
+        {{ profile_user.get_member_type_display }}
+      </span>
+      <div class="profile-points">
+        <span class="points-value">{{ profile_user.points }}</span>
+        <span class="points-label">포인트</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-body">
+    <section class="profile-section">
+      <h2 class="profile-section-title">내가 기록한 해방일지</h2>
+      {% if contents %}
+      <div class="profile-contents-grid">
+        {% for content in contents %}
+        <a href="{% url 'detail' content.pk %}" class="profile-content-item {% if content.status == 'pending' %}status-pending{% elif content.status == 'rejected' %}status-rejected{% endif %}">
+          <div class="pci-img">
+            <img src="{{ content.image.url }}" alt="{{ content.title }}">
+          </div>
+          <div class="pci-info">
+            <span class="pci-status">
+              {% if content.status == 'pending' %}⏳ 승인 대기
+              {% elif content.status == 'approved' %}✅ 공개 중
+              {% else %}❌ 거절됨{% endif %}
+            </span>
+            <p class="pci-title">{{ content.title }}</p>
+            <p class="pci-date">{{ content.created_at|date:"Y.m.d" }}</p>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="profile-empty">아직 기록한 해방일지가 없어요. <a href="{% url 'create_content' %}">지금 기록하기</a></p>
+      {% endif %}
+    </section>
+
+    <section class="profile-section">
+      <h2 class="profile-section-title">포인트 내역</h2>
+      <div class="point-history">
+        {% for ph in recent_points %}
+        <div class="point-item">
+          <span class="point-action">{{ ph.get_action_display }}</span>
+          <span class="point-earned">+{{ ph.points }}pt</span>
+          <span class="point-date">{{ ph.created_at|date:"m.d" }}</span>
+        </div>
+        {% empty %}
+        <p class="profile-empty">아직 포인트 내역이 없어요.</p>
+        {% endfor %}
+      </div>
+      <div class="point-guide">
+        <h3>포인트 적립 안내</h3>
+        <ul>
+          <li>회원가입: +10pt</li>
+          <li>해방일지 업로드 (승인 시): +50pt</li>
+          <li>댓글 작성: +5pt</li>
+          <li>반응 남기기: +2pt</li>
+          <li>찜하기: +5pt</li>
+          <li>투표하기: +2pt</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+</div>
+{% endblock %}

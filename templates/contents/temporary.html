@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load dict_extras %}
+
+{% block title %}임시저장소 — 나의 반려쓰레기 해방일지{% endblock %}
+
+{% block content %}
+<section class="archive-section">
+  <div class="section-header">
+    <div>
+      <p class="section-eyebrow">Temporary Storage</p>
+      <h2 class="section-title">임시저장소</h2>
+      <p class="section-desc">아직 결정을 못 내린 물건들이 모여 있어요.<br>버릴지 말지, 여러분의 의견을 남겨주세요!</p>
+    </div>
+    <div class="section-tabs">
+      <a href="{% url 'home' %}" class="tab">전체</a>
+      <a href="{% url 'temporary' %}" class="tab active">임시저장소</a>
+      <a href="{% url 'exhibition' %}" class="tab">실물전시</a>
+    </div>
+  </div>
+
+  {% if contents %}
+  <div class="archive-grid archive-grid-wide">
+    {% for content in contents %}
+    <div class="archive-card-wide">
+      <a href="{% url 'detail' content.pk %}" class="card-img-link">
+        <div class="card-img-wrap">
+          <img src="{{ content.image.url }}" alt="{{ content.title }}" loading="lazy">
+        </div>
+      </a>
+      <div class="card-body">
+        <h3 class="card-title-wide">
+          <a href="{% url 'detail' content.pk %}">{{ content.title }}</a>
+        </h3>
+        <p class="card-nickname-wide">by {{ content.nickname }}</p>
+        <p class="card-excerpt-wide">{{ content.story|truncatechars:120 }}</p>
+
+        <div class="vote-bar">
+          {% with total=content.throw_vote_count|add:content.keep_vote_count %}
+          {% if total > 0 %}
+          <div class="vote-progress">
+            <div class="vote-fill-throw" style="width:{% widthratio content.throw_vote_count total 100 %}%"></div>
+          </div>
+          {% endif %}
+          {% endwith %}
+          <div class="vote-counts">
+            <span class="vote-label-throw">🗑️ 버려라 {{ content.throw_vote_count }}</span>
+            <span class="vote-label-keep">🤗 말아라 {{ content.keep_vote_count }}</span>
+          </div>
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="quick-vote">
+          <button class="qvote-btn {% if user_votes|get_item:content.pk == 'throw' %}active-throw{% endif %}"
+                  data-vote="throw" data-pk="{{ content.pk }}">
+            🗑️ 버려라
+          </button>
+          <button class="qvote-btn {% if user_votes|get_item:content.pk == 'keep' %}active-keep{% endif %}"
+                  data-vote="keep" data-pk="{{ content.pk }}">
+            🤗 말아라
+          </button>
+        </div>
+        {% else %}
+        <a href="{% url 'login' %}?next={% url 'temporary' %}" class="vote-login-hint">
+          로그인하고 투표하기 →
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <p class="empty-icon">🗄️</p>
+    <p class="empty-title">아직 임시보관 중인 물건이 없어요</p>
+    <a href="{% url 'create_content' %}" class="btn-primary">해방일지 기록하기</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+document.querySelectorAll('.qvote-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const res = await fetch(`/content/${btn.dataset.pk}/vote/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded'},
+      body: `vote_type=${btn.dataset.vote}`
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const card = btn.closest('.archive-card-wide');
+      card.querySelectorAll('.qvote-btn').forEach(b => b.classList.remove('active-throw', 'active-keep'));
+      if (data.current_vote) {
+        card.querySelector(`[data-vote="${data.current_vote}"]`)?.classList.add(`active-${data.current_vote}`);
+      }
+      card.querySelector('.vote-label-throw').textContent = `🗑️ 버려라 ${data.throw_count}`;
+      card.querySelector('.vote-label-keep').textContent = `🤗 말아라 ${data.keep_count}`;
+    }
+  });
+});
+</script>
+{% endblock %}

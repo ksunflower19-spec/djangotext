@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}해방일지 기록하기 — 나의 반려쓰레기 해방일지{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-page-inner">
+
+    <div class="form-header">
+      <p class="form-eyebrow">Liberation Journal</p>
+      <h1 class="form-title">해방일지 기록하기</h1>
+      <p class="form-desc">당신의 반려쓰레기 이야기를 들려주세요.<br>관리자 승인 후 아카이브에 공개됩니다.</p>
+    </div>
+
+    <div class="photo-guide">
+      <h3 class="guide-title">📸 사진 촬영 가이드</h3>
+      <ul class="guide-list">
+        <li>흰색 또는 밝은 단색 배경 앞에 물건을 놓아주세요</li>
+        <li>물건의 정면이 잘 보이도록 촬영해주세요</li>
+        <li>물건 전체가 프레임 안에 들어오도록 해주세요</li>
+        <li>밝은 자연광이나 조명 아래에서 촬영하시면 더 좋아요</li>
+      </ul>
+    </div>
+
+    <form class="content-form" method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="form-errors">
+        {% for error in form.non_field_errors %}
+        <p class="form-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label class="form-label">{{ form.image.label }} <span class="required">*</span></label>
+        <div class="file-upload-area" id="fileUploadArea">
+          <div class="file-upload-placeholder" id="uploadPlaceholder">
+            <span class="upload-icon">📷</span>
+            <p>클릭하거나 파일을 드래그하세요</p>
+            <p class="upload-hint">흰 배경, 정면 촬영 권장</p>
+          </div>
+          <img id="imagePreview" class="image-preview" style="display:none;" alt="미리보기">
+          {{ form.image }}
+        </div>
+        {% if form.image.errors %}
+        <p class="field-error">{{ form.image.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.title.id_for_label }}">
+          {{ form.title.label }} <span class="required">*</span>
+        </label>
+        {{ form.title }}
+        {% if form.title.errors %}<p class="field-error">{{ form.title.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.story.id_for_label }}">
+          {{ form.story.label }} <span class="required">*</span>
+        </label>
+        <p class="field-hint">에세이 형식으로 자유롭게 써주세요. 이 물건과의 이야기, 버리지 못했던 이유, 이제 보내는 마음을 담아주세요.</p>
+        {{ form.story }}
+        {% if form.story.errors %}<p class="field-error">{{ form.story.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ form.category.label }} <span class="required">*</span></label>
+        <div class="radio-group">
+          {% for choice in form.category %}
+          <label class="radio-option">
+            {{ choice.tag }}
+            <span class="radio-label">
+              <span class="radio-title">{{ choice.choice_label }}</span>
+              {% if choice.data.value == 'immediate_trash' %}
+              <span class="radio-desc">물건을 직접 처분하고 이야기만 남겨요</span>
+              {% elif choice.data.value == 'immediate_exhibition' %}
+              <span class="radio-desc">물건을 오프라인 전시에 기증하고 판매 수익을 기부해요</span>
+              {% elif choice.data.value == 'temporary_storage' %}
+              <span class="radio-desc">아직 결정 못했어요. 사람들의 의견을 들어볼게요</span>
+              {% endif %}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+        {% if form.category.errors %}<p class="field-error">{{ form.category.errors.0 }}</p>{% endif %}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.nickname.id_for_label }}">
+            {{ form.nickname.label }} <span class="required">*</span>
+          </label>
+          {{ form.nickname }}
+          {% if form.nickname.errors %}<p class="field-error">{{ form.nickname.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.password.id_for_label }}">
+            {{ form.password.label }} <span class="required">*</span>
+          </label>
+          {{ form.password }}
+          {% if form.password.errors %}<p class="field-error">{{ form.password.errors.0 }}</p>{% endif %}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="{{ form.confirm_password.id_for_label }}">
+            {{ form.confirm_password.label }} <span class="required">*</span>
+          </label>
+          {{ form.confirm_password }}
+          {% if form.confirm_password.errors %}<p class="field-error">{{ form.confirm_password.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <div class="form-submit">
+        <button type="submit" class="btn-primary btn-large">해방일지 등록하기</button>
+        <p class="submit-note">관리자 승인 후 아카이브에 공개됩니다</p>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const fileInput = document.querySelector('.form-file');
+const preview = document.getElementById('imagePreview');
+const placeholder = document.getElementById('uploadPlaceholder');
+
+if (fileInput) {
+  fileInput.addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        placeholder.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+</script>
+{% endblock %}

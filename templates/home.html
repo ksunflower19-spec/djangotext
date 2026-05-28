@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}아카이브 — 나의 반려쓰레기 해방일지{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-inner">
+    <p class="hero-eyebrow">Archive</p>
+    <h1 class="hero-title">나의 반려쓰레기<br>해방일지</h1>
+    <p class="hero-desc">버리고 싶었지만 그동안 버리지 못했던 반려쓰레기를<br>기록하고, 전시하는 플랫폼입니다.</p>
+    <a href="{% url 'create_content' %}" class="btn-primary">지금 기록하기</a>
+  </div>
+</section>
+
+<section class="archive-section">
+  <div class="section-header">
+    <h2 class="section-title">해방일지 아카이브</h2>
+    <div class="section-tabs">
+      <a href="{% url 'home' %}" class="tab active">전체</a>
+      <a href="{% url 'temporary' %}" class="tab">임시저장소</a>
+      <a href="{% url 'exhibition' %}" class="tab">실물전시</a>
+    </div>
+  </div>
+
+  {% if contents %}
+  <div class="archive-grid">
+    {% for content in contents %}
+    <a href="{% url 'detail' content.pk %}" class="archive-card">
+      <div class="card-img-wrap">
+        <img src="{{ content.image.url }}" alt="{{ content.title }}" loading="lazy">
+        <div class="card-overlay">
+          <div class="card-info">
+            <span class="card-category category-{{ content.category }}">
+              {{ content.get_category_display }}
+            </span>
+            <h3 class="card-title">{{ content.title }}</h3>
+            <p class="card-excerpt">{{ content.story|truncatechars:80 }}</p>
+            <div class="card-reactions">
+              <span>🫂 {{ content.empathy_count }}</span>
+              <span>😢 {{ content.sad_count }}</span>
+              <span>😤 {{ content.angry_count }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-meta">
+        <span class="card-nickname">{{ content.nickname }}</span>
+        <span class="card-date">{{ content.created_at|date:"Y.m.d" }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if contents.has_other_pages %}
+  <div class="pagination">
+    {% if contents.has_previous %}
+    <a href="?page={{ contents.previous_page_number }}" class="page-btn">← 이전</a>
+    {% endif %}
+    <span class="page-current">{{ contents.number }} / {{ contents.paginator.num_pages }}</span>
+    {% if contents.has_next %}
+    <a href="?page={{ contents.next_page_number }}" class="page-btn">다음 →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <p class="empty-icon">📦</p>
+    <p class="empty-title">아직 해방된 반려쓰레기가 없습니다</p>
+    <p class="empty-sub">첫 번째로 당신의 이야기를 들려주세요</p>
+    <a href="{% url 'create_content' %}" class="btn-primary">해방일지 기록하기</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

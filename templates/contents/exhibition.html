@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}실물전시 참여 물품 — 나의 반려쓰레기 해방일지{% endblock %}
+
+{% block content %}
+<section class="archive-section">
+  <div class="section-header">
+    <div>
+      <p class="section-eyebrow">Physical Exhibition</p>
+      <h2 class="section-title">실물전시 참여 물품</h2>
+      <p class="section-desc">오프라인 전시에서 만날 수 있는 반려쓰레기들이에요.<br>마음에 드는 물건을 찜해두면 구매 우선권이 주어집니다 (최대 3명).</p>
+    </div>
+    <div class="section-tabs">
+      <a href="{% url 'home' %}" class="tab">전체</a>
+      <a href="{% url 'temporary' %}" class="tab">임시저장소</a>
+      <a href="{% url 'exhibition' %}" class="tab active">실물전시</a>
+    </div>
+  </div>
+
+  {% if contents %}
+  <div class="archive-grid">
+    {% for content in contents %}
+    <div class="archive-card-exhibition">
+      <a href="{% url 'detail' content.pk %}" class="card-img-wrap">
+        <img src="{{ content.image.url }}" alt="{{ content.title }}" loading="lazy">
+        {% if content.wishlist_count >= 3 %}
+        <div class="sold-out-badge">찜 마감</div>
+        {% endif %}
+      </a>
+      <div class="card-footer">
+        <div class="card-footer-info">
+          <h3 class="card-title-sm">
+            <a href="{% url 'detail' content.pk %}">{{ content.title }}</a>
+          </h3>
+          <p class="card-nickname-sm">by {{ content.nickname }}</p>
+        </div>
+        <div class="card-wishlist">
+          {% if user.is_authenticated %}
+            {% if content.pk in user_wishlists %}
+            <button class="wishlist-mini active" data-pk="{{ content.pk }}">
+              ❤️ <span class="wc">{{ content.wishlist_count }}</span>/3
+            </button>
+            {% elif content.wishlist_count >= 3 %}
+            <button class="wishlist-mini disabled" disabled>❤️ 마감</button>
+            {% else %}
+            <button class="wishlist-mini" data-pk="{{ content.pk }}">
+              🤍 <span class="wc">{{ content.wishlist_count }}</span>/3
+            </button>
+            {% endif %}
+          {% else %}
+          <a href="{% url 'login' %}?next={% url 'exhibition' %}" class="wishlist-mini">
+            🤍 {{ content.wishlist_count }}/3
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <p class="empty-icon">🎨</p>
+    <p class="empty-title">실물전시 참여 물품이 없어요</p>
+    <a href="{% url 'create_content' %}" class="btn-primary">해방일지 기록하기</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = document.cookie.match(/csrftoken=([^;]+)/)?.[1] || '';
+
+document.querySelectorAll('.wishlist-mini[data-pk]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const res = await fetch(`/content/${btn.dataset.pk}/wishlist/`, {
+      method: 'POST',
+      headers: {'X-CSRFToken': CSRF},
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const countEl = btn.querySelector('.wc');
+      if (countEl) countEl.textContent = data.wishlist_count;
+      if (data.wishlisted) {
+        btn.classList.add('active');
+        btn.innerHTML = `❤️ <span class="wc">${data.wishlist_count}</span>/3`;
+      } else {
+        btn.classList.remove('active');
+        btn.innerHTML = `🤍 <span class="wc">${data.wishlist_count}</span>/3`;
+      }
+      if (!data.can_add && !data.wishlisted) {
+        btn.disabled = true;
+        btn.classList.add('disabled');
+        btn.textContent = '❤️ 마감';
+      }
+    } else {
+      const err = await res.json();
+      alert(err.error);
+    }
+  });
+});
+</script>
+{% endblock %}

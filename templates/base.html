@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}나의 반려쓰레기 해방일지{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="nav-container">
+    <a href="{% url 'home' %}" class="nav-logo">
+      <span class="logo-ko">나의 반려쓰레기</span>
+      <span class="logo-sub">해방일지</span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle" aria-label="메뉴">
+      <span></span><span></span><span></span>
+    </button>
+
+    <div class="nav-menu" id="navMenu">
+      <div class="nav-links">
+        <a href="{% url 'home' %}" class="nav-link">아카이브</a>
+        <a href="{% url 'temporary' %}" class="nav-link">임시저장소</a>
+        <a href="{% url 'exhibition' %}" class="nav-link">실물전시</a>
+        <a href="{% url 'create_content' %}" class="nav-link nav-cta">해방일지 기록하기</a>
+      </div>
+      <div class="nav-auth">
+        {% if user.is_authenticated %}
+          <a href="{% url 'profile' %}" class="nav-link nav-user">
+            <span class="user-points">{{ user.points }}pt</span>
+            {{ user.username }}
+          </a>
+          <a href="{% url 'logout' %}" class="nav-link nav-logout">로그아웃</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="nav-link">로그인</a>
+          <a href="{% url 'register' %}" class="btn-primary-sm">회원가입</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+</header>
+
+{% if messages %}
+<div class="messages-container">
+  {% for message in messages %}
+  <div class="message message-{{ message.tags }}">
+    {{ message }}
+    <button class="message-close" onclick="this.parentElement.remove()">×</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-title">나의 반려쓰레기 해방일지</p>
+    <p class="footer-sub">버리고 싶었지만 버리지 못했던 것들을 위한 공간</p>
+    <p class="footer-copy">© 2025 나의 반려쓰레기 해방일지</p>
+  </div>
+</footer>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
