@@ -1,8 +1,8 @@
+import os
 from django.core.management.base import BaseCommand
-from django.core.files.base import ContentFile
+from django.core.files import File
+from django.conf import settings
 from contents.models import Content
-from PIL import Image, ImageDraw
-from io import BytesIO
 
 SAMPLE_DATA = [
     {
@@ -19,8 +19,7 @@ SAMPLE_DATA = [
         ),
         'nickname': '서울 촌놈',
         'category': 'immediate_trash',
-        'bg': (245, 235, 210),
-        'fg': (140, 110, 70),
+        'image_file': '1.png',
     },
     {
         'title': '첫 월급으로 산 머그컵',
@@ -35,8 +34,7 @@ SAMPLE_DATA = [
         ),
         'nickname': '직장인 A',
         'category': 'immediate_exhibition',
-        'bg': (210, 225, 245),
-        'fg': (60, 90, 140),
+        'image_file': '2.png',
     },
     {
         'title': '전 남자친구가 준 곰인형',
@@ -52,8 +50,7 @@ SAMPLE_DATA = [
         ),
         'nickname': '봄날의 곰',
         'category': 'temporary_storage',
-        'bg': (250, 215, 220),
-        'fg': (160, 70, 90),
+        'image_file': '3.png',
     },
     {
         'title': '아버지의 낡은 공구함',
@@ -70,34 +67,11 @@ SAMPLE_DATA = [
         ),
         'nickname': '막내아들',
         'category': 'immediate_exhibition',
-        'bg': (205, 215, 200),
-        'fg': (60, 90, 60),
+        'image_file': '4.png',
     },
 ]
 
-
-def make_placeholder_image(bg_color, fg_color, size=800):
-    img = Image.new('RGB', (size, size), color=bg_color)
-    draw = ImageDraw.Draw(img)
-
-    # 바깥 테두리
-    margin = 32
-    draw.rectangle(
-        [margin, margin, size - margin, size - margin],
-        outline=fg_color + (120,) if len(fg_color) == 3 else fg_color,
-        width=1,
-    )
-    # 안쪽 테두리
-    draw.rectangle(
-        [margin + 8, margin + 8, size - margin - 8, size - margin - 8],
-        outline=fg_color,
-        width=1,
-    )
-
-    buf = BytesIO()
-    img.save(buf, format='JPEG', quality=88)
-    buf.seek(0)
-    return buf.read()
+SAMPLE_IMG_DIR = os.path.join(settings.BASE_DIR, 'static', 'img-sample')
 
 
 class Command(BaseCommand):
@@ -109,7 +83,7 @@ class Command(BaseCommand):
             return
 
         for i, data in enumerate(SAMPLE_DATA):
-            img_bytes = make_placeholder_image(data['bg'], data['fg'])
+            img_path = os.path.join(SAMPLE_IMG_DIR, data['image_file'])
 
             content = Content(
                 title=data['title'],
@@ -119,12 +93,28 @@ class Command(BaseCommand):
                 status='approved',
             )
             content.set_password('sample1234')
-            content.image.save(
-                f'sample_{i + 1}.jpg',
-                ContentFile(img_bytes),
-                save=False,
-            )
+
+            if os.path.exists(img_path):
+                with open(img_path, 'rb') as f:
+                    content.image.save(data['image_file'], File(f), save=False)
+            else:
+                self.stdout.write(f'  ⚠ 이미지 없음: {img_path} — PIL 대체 이미지 사용')
+                self._save_with_placeholder(content, i)
+
             content.save()
             self.stdout.write(f'  ✓ 생성: {data["title"]} ({data["category"]})')
 
         self.stdout.write(self.style.SUCCESS('샘플 콘텐츠 4개 생성 완료!'))
+
+    def _save_with_placeholder(self, content, idx):
+        from PIL import Image, ImageDraw
+        from io import BytesIO
+        from django.core.files.base import ContentFile
+
+        colors = [(245,235,210), (210,225,245), (250,215,220), (205,215,200)]
+        bg = colors[idx % len(colors)]
+        img = Image.new('RGB', (800, 800), color=bg)
+        buf = BytesIO()
+        img.save(buf, format='JPEG', quality=85)
+        buf.seek(0)
+        content.image.save(f'sample_{idx+1}.jpg', ContentFile(buf.read()), save=False)
