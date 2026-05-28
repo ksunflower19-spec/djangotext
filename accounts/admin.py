@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, PointHistory
+from .models import User, PointHistory, ProjectCode, Notification
 
 
 @admin.register(User)
@@ -19,4 +19,17 @@ class CustomUserAdmin(UserAdmin):
 class PointHistoryAdmin(admin.ModelAdmin):
     list_display = ['user', 'action', 'points', 'created_at']
     list_filter = ['action']
+    readonly_fields = ['created_at']
+
+
+@admin.register(ProjectCode)
+class ProjectCodeAdmin(admin.ModelAdmin):
+    list_display = ['code', 'group_name', 'description']
+    search_fields = ['code', 'group_name']
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ['user', 'message', 'is_read', 'created_at']
+    list_filter = ['is_read']
     readonly_fields = ['created_at']
