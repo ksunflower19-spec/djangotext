@@ -5,14 +5,21 @@ from .models import User, PointHistory, ProjectCode, Notification
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    list_display = ['username', 'email', 'member_type', 'points', 'date_joined', 'is_active']
+    list_display = ['username', 'email', 'member_type', 'points', 'total_points', 'level_display', 'date_joined', 'is_active']
     list_filter = ['member_type', 'is_active', 'is_staff']
+    readonly_fields = ['level_display']
     fieldsets = UserAdmin.fieldsets + (
-        ('추가 정보', {'fields': ('member_type', 'points', 'bio')}),
+        ('포인트 & 레벨', {'fields': ('points', 'total_points', 'level_display')}),
+        ('회원 정보', {'fields': ('member_type', 'project_group', 'bio')}),
     )
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('추가 정보', {'fields': ('member_type',)}),
+        ('회원 정보', {'fields': ('member_type',)}),
     )
+
+    @admin.display(description='레벨')
+    def level_display(self, obj):
+        lv = obj.total_points // 1000
+        return f'Lv.{lv}' if lv > 0 else 'Lv.0'
 
 
 @admin.register(PointHistory)

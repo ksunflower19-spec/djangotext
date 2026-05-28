@@ -1,14 +1,15 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}아카이브 — 나의 반려쓰레기 해방일지{% endblock %}
 
 {% block content %}
-<section class="hero">
+<section class="hero" style="background-image: url('{% static 'img-brand/hero1.png' %}');">
   <div class="hero-inner">
     <p class="hero-eyebrow">Archive</p>
     <h1 class="hero-title">나의 반려쓰레기<br>해방일지</h1>
     <p class="hero-desc">버리고 싶었지만 그동안 버리지 못했던 반려쓰레기를<br>기록하고, 전시하는 플랫폼입니다.</p>
-    <a href="{% url 'create_content' %}" class="btn-primary">지금 기록하기</a>
+    <a href="{% url 'create_content' %}" class="btn-primary btn-hero">지금 기록하기</a>
   </div>
 </section>
 

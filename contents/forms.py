@@ -38,6 +38,10 @@ class ContentForm(forms.ModelForm):
             'image': forms.FileInput(attrs={'class': 'form-file', 'accept': 'image/*'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].choices = Content.CATEGORIES
+
     def clean(self):
         cleaned_data = super().clean()
         pw = cleaned_data.get('password')
@@ -63,6 +67,10 @@ class ContentEditForm(forms.ModelForm):
             'category': forms.RadioSelect(),
             'image': forms.FileInput(attrs={'class': 'form-file', 'accept': 'image/*'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['category'].choices = Content.CATEGORIES
 
 
 class CommentForm(forms.ModelForm):
