@@ -7,7 +7,7 @@
 <section class="hero" style="background-image: url('{% static 'img-brand/hero2.png' %}');">
   <div class="hero-inner">
     <p class="hero-eyebrow">Archive</p>
-    <h1 class="hero-title">나의 반려쓰레기<br>해방일지</h1>
+    <h1 class="hero-title">나의 해방일지</h1>
     <p class="hero-desc">버리고 싶었지만 그동안 버리지 못했던 반려쓰레기를<br>기록하고, 전시하는 플랫폼입니다.</p>
     <a href="{% url 'create_content' %}" class="btn-primary btn-hero">지금 기록하기</a>
   </div>
@@ -39,14 +39,6 @@
             <h3 class="card-title">{{ content.title }}</h3>
             <p class="card-nick">by {{ content.nickname }}{% if content.author and content.author.level_label %} <span class="lv lv-sm">{{ content.author.level_label }}</span>{% endif %}</p>
           </div>
-          {% if not user.is_authenticated %}
-          <div class="card-lock">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="28" height="28">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
-            </svg>
-            <span>로그인 후 읽기</span>
-          </div>
-          {% endif %}
         </div>
       </div>
     </a>
