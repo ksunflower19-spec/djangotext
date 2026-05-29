@@ -70,6 +70,15 @@
   </nav>
 </header>
 
+{% if not user.is_authenticated and request.session.guest_points %}
+<div class="guest-points-banner">
+  <div class="guest-points-inner">
+    <span>현재 <strong>{{ request.session.guest_points }}pt</strong> 쌓는 중 — 지금 떠나면 포인트가 사라져요</span>
+    <a href="{% url 'register' %}" class="gp-btn">회원가입하면 유지됩니다 →</a>
+  </div>
+</div>
+{% endif %}
+
 {% if messages %}
 <div class="messages-container">
   {% for message in messages %}
@@ -99,5 +108,13 @@
 
 <script src="{% static 'js/main.js' %}"></script>
 {% block extra_js %}{% endblock %}
+{% if not user.is_authenticated and request.session.guest_points %}
+<script>
+window.addEventListener('beforeunload', function(e) {
+  e.preventDefault();
+  e.returnValue = '';
+});
+</script>
+{% endif %}
 </body>
 </html>

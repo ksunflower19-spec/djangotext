@@ -21,11 +21,7 @@
   {% if contents %}
   <div class="archive-grid">
     {% for content in contents %}
-    {% if user.is_authenticated %}
-    <a href="{% url 'detail' content.pk %}" class="archive-card">
-    {% else %}
-    <a href="{% url 'login' %}?next={% url 'detail' content.pk %}" class="archive-card card-guest">
-    {% endif %}
+    <a href="{% url 'detail' content.pk %}" class="archive-card {% if not user.is_authenticated %}card-guest{% endif %}">
       <div class="card-img-wrap">
         <img src="{{ content.image.url }}" alt="{{ content.title }}" loading="lazy">
         <div class="card-overlay">

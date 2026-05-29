@@ -189,6 +189,9 @@ def create(request):
                 msg = '해방일지가 등록되었습니다!'
                 if request.user.is_authenticated:
                     request.user.add_points('upload')
+                else:
+                    request.session['guest_points'] = request.session.get('guest_points', 0) + 50
+                    request.session.modified = True
             content.save()
             messages.success(request, msg)
             return redirect('home')
@@ -261,6 +264,8 @@ def add_comment(request, pk):
                 guest_nickname=form.cleaned_data['nickname'],
                 text=form.cleaned_data['text'],
             )
+            request.session['guest_points'] = request.session.get('guest_points', 0) + 5
+            request.session.modified = True
     else:
         form = CommentForm(request.POST)
         if form.is_valid():
@@ -294,6 +299,8 @@ def toggle_reaction(request, pk):
             section.append(reaction_type)
             active = True
         request.session['guest_reactions'] = guest_reactions
+        if active:
+            request.session['guest_points'] = request.session.get('guest_points', 0) + 2
         request.session.modified = True
         return JsonResponse({
             'active': active,
