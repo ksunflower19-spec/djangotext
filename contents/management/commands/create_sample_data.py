@@ -72,13 +72,20 @@ SAMPLE_DATA = [
 ]
 
 SAMPLE_IMG_DIR = os.path.join(settings.BASE_DIR, 'static', 'img-sample')
+SAMPLE_TITLES = [d['title'] for d in SAMPLE_DATA]
 
 
 class Command(BaseCommand):
-    help = '샘플 콘텐츠 4개를 생성합니다 (콘텐츠가 없을 때만 실행)'
+    help = '샘플 콘텐츠 4개를 생성합니다'
+
+    def add_arguments(self, parser):
+        parser.add_argument('--reset', action='store_true', help='기존 샘플 콘텐츠를 삭제하고 재생성')
 
     def handle(self, *args, **options):
-        if Content.objects.exists():
+        if options['reset']:
+            deleted, _ = Content.objects.filter(title__in=SAMPLE_TITLES).delete()
+            self.stdout.write(f'기존 샘플 {deleted}개 삭제')
+        elif Content.objects.exists():
             self.stdout.write('콘텐츠가 이미 존재합니다. 샘플 생성을 건너뜁니다.')
             return
 
