@@ -1,6 +1,18 @@
 from django.contrib import admin
+from django.contrib import messages as admin_messages
+from django.shortcuts import redirect
+from django.urls import path, reverse
 from django.utils.html import format_html
 from .models import Content, Comment, Reaction, Vote, Wishlist, SiteConfig
+
+
+PUBLIC_FIELDS = [
+    'write_public',
+    'archive_read_public', 'archive_comment_public', 'archive_reaction_public',
+    'temporary_read_public', 'temporary_comment_public', 'temporary_reaction_public',
+    'exhibition_read_public', 'exhibition_comment_public', 'exhibition_reaction_public',
+    'exhibition_wishlist_public',
+]
 
 
 @admin.register(Content)
@@ -53,9 +65,14 @@ class ContentAdmin(admin.ModelAdmin):
 
 @admin.register(SiteConfig)
 class SiteConfigAdmin(admin.ModelAdmin):
+    readonly_fields = ['quick_toggle_buttons']
     fieldsets = (
         ('콘텐츠 승인', {
             'fields': ('require_approval', 'auto_approve_groups'),
+        }),
+        ('비회원 권한 빠른 설정', {
+            'fields': ('quick_toggle_buttons',),
+            'description': '아래 버튼으로 비회원 권한을 한꺼번에 켜거나 끌 수 있습니다.',
         }),
         ('비회원 글쓰기', {
             'fields': ('write_public',),
@@ -71,6 +88,34 @@ class SiteConfigAdmin(admin.ModelAdmin):
             'fields': ('exhibition_read_public', 'exhibition_comment_public', 'exhibition_reaction_public', 'exhibition_wishlist_public'),
         }),
     )
+
+    def quick_toggle_buttons(self, obj):
+        allow_url = reverse('admin:siteconfig_allow_all', args=[obj.pk])
+        disallow_url = reverse('admin:siteconfig_disallow_all', args=[obj.pk])
+        return format_html(
+            '<a class="button" href="{}" style="background:#417690;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;margin-right:8px;">모두 허용</a>'
+            '<a class="button" href="{}" style="background:#ba2121;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;">모두 허용하지 않음</a>',
+            allow_url, disallow_url,
+        )
+    quick_toggle_buttons.short_description = '비회원 권한 일괄 설정'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path('<int:pk>/allow_all/', self.admin_site.admin_view(self._allow_all_view), name='siteconfig_allow_all'),
+            path('<int:pk>/disallow_all/', self.admin_site.admin_view(self._disallow_all_view), name='siteconfig_disallow_all'),
+        ]
+        return custom + urls
+
+    def _allow_all_view(self, request, pk):
+        SiteConfig.objects.filter(pk=pk).update(**{f: True for f in PUBLIC_FIELDS})
+        admin_messages.success(request, '모든 비회원 권한이 허용되었습니다.')
+        return redirect(reverse('admin:contents_siteconfig_change', args=[pk]))
+
+    def _disallow_all_view(self, request, pk):
+        SiteConfig.objects.filter(pk=pk).update(**{f: False for f in PUBLIC_FIELDS})
+        admin_messages.success(request, '모든 비회원 권한이 차단되었습니다.')
+        return redirect(reverse('admin:contents_siteconfig_change', args=[pk]))
 
     def has_add_permission(self, request):
         return not SiteConfig.objects.exists()

@@ -154,20 +154,20 @@ class SiteConfig(models.Model):
         help_text='이 그룹에 속한 회원은 승인 없이 바로 공개됩니다. 예: 1기참여자, 운영팀',
     )
     # 비회원 글쓰기
-    write_public = models.BooleanField(default=False, verbose_name='비회원 글쓰기 허용')
+    write_public = models.BooleanField(default=True, verbose_name='비회원 글쓰기 허용')
     # 아카이브 (즉시해방-직접버리기)
-    archive_read_public = models.BooleanField(default=False, verbose_name='읽기')
-    archive_comment_public = models.BooleanField(default=False, verbose_name='댓글')
-    archive_reaction_public = models.BooleanField(default=False, verbose_name='반응')
+    archive_read_public = models.BooleanField(default=True, verbose_name='읽기')
+    archive_comment_public = models.BooleanField(default=True, verbose_name='댓글')
+    archive_reaction_public = models.BooleanField(default=True, verbose_name='반응')
     # 임시저장소
-    temporary_read_public = models.BooleanField(default=False, verbose_name='읽기')
-    temporary_comment_public = models.BooleanField(default=False, verbose_name='댓글')
-    temporary_reaction_public = models.BooleanField(default=False, verbose_name='반응')
+    temporary_read_public = models.BooleanField(default=True, verbose_name='읽기')
+    temporary_comment_public = models.BooleanField(default=True, verbose_name='댓글')
+    temporary_reaction_public = models.BooleanField(default=True, verbose_name='반응')
     # 실물전시
-    exhibition_read_public = models.BooleanField(default=False, verbose_name='읽기')
-    exhibition_comment_public = models.BooleanField(default=False, verbose_name='댓글')
-    exhibition_reaction_public = models.BooleanField(default=False, verbose_name='반응')
-    exhibition_wishlist_public = models.BooleanField(default=False, verbose_name='찜')
+    exhibition_read_public = models.BooleanField(default=True, verbose_name='읽기')
+    exhibition_comment_public = models.BooleanField(default=True, verbose_name='댓글')
+    exhibition_reaction_public = models.BooleanField(default=True, verbose_name='반응')
+    exhibition_wishlist_public = models.BooleanField(default=True, verbose_name='찜')
 
     class Meta:
         verbose_name = '사이트 설정'
