@@ -53,6 +53,25 @@ class ContentAdmin(admin.ModelAdmin):
 
 @admin.register(SiteConfig)
 class SiteConfigAdmin(admin.ModelAdmin):
+    fieldsets = (
+        ('콘텐츠 승인', {
+            'fields': ('require_approval', 'auto_approve_groups'),
+        }),
+        ('비회원 글쓰기', {
+            'fields': ('write_public',),
+            'description': '체크하면 로그인 없이도 해방일지를 기록할 수 있습니다.',
+        }),
+        ('비회원 권한 — 아카이브 (즉시해방·직접버리기)', {
+            'fields': ('archive_read_public', 'archive_comment_public', 'archive_reaction_public'),
+        }),
+        ('비회원 권한 — 임시저장소', {
+            'fields': ('temporary_read_public', 'temporary_comment_public', 'temporary_reaction_public'),
+        }),
+        ('비회원 권한 — 실물전시', {
+            'fields': ('exhibition_read_public', 'exhibition_comment_public', 'exhibition_reaction_public', 'exhibition_wishlist_public'),
+        }),
+    )
+
     def has_add_permission(self, request):
         return not SiteConfig.objects.exists()
 

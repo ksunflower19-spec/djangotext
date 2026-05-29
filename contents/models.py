@@ -90,7 +90,8 @@ class Content(models.Model):
 
 class Comment(models.Model):
     content = models.ForeignKey(Content, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='comments')
+    guest_nickname = models.CharField(max_length=50, blank=True, verbose_name='비회원 닉네임')
     text = models.TextField(verbose_name='댓글')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -152,6 +153,21 @@ class SiteConfig(models.Model):
         verbose_name='자동 승인 그룹 (쉼표로 구분)',
         help_text='이 그룹에 속한 회원은 승인 없이 바로 공개됩니다. 예: 1기참여자, 운영팀',
     )
+    # 비회원 글쓰기
+    write_public = models.BooleanField(default=False, verbose_name='비회원 글쓰기 허용')
+    # 아카이브 (즉시해방-직접버리기)
+    archive_read_public = models.BooleanField(default=False, verbose_name='읽기')
+    archive_comment_public = models.BooleanField(default=False, verbose_name='댓글')
+    archive_reaction_public = models.BooleanField(default=False, verbose_name='반응')
+    # 임시저장소
+    temporary_read_public = models.BooleanField(default=False, verbose_name='읽기')
+    temporary_comment_public = models.BooleanField(default=False, verbose_name='댓글')
+    temporary_reaction_public = models.BooleanField(default=False, verbose_name='반응')
+    # 실물전시
+    exhibition_read_public = models.BooleanField(default=False, verbose_name='읽기')
+    exhibition_comment_public = models.BooleanField(default=False, verbose_name='댓글')
+    exhibition_reaction_public = models.BooleanField(default=False, verbose_name='반응')
+    exhibition_wishlist_public = models.BooleanField(default=False, verbose_name='찜')
 
     class Meta:
         verbose_name = '사이트 설정'
@@ -168,11 +184,32 @@ class SiteConfig(models.Model):
     def user_needs_approval(self, user):
         if not self.require_approval:
             return False
-        if user and user.project_group:
+        if user and getattr(user, 'is_authenticated', False) and getattr(user, 'project_group', None):
             allowed = [g.strip() for g in self.auto_approve_groups.split(',') if g.strip()]
             if user.project_group in allowed:
                 return False
         return True
+
+    def can_public_read(self, category):
+        return {
+            'immediate_trash': self.archive_read_public,
+            'immediate_exhibition': self.exhibition_read_public,
+            'temporary_storage': self.temporary_read_public,
+        }.get(category, False)
+
+    def can_public_comment(self, category):
+        return {
+            'immediate_trash': self.archive_comment_public,
+            'immediate_exhibition': self.exhibition_comment_public,
+            'temporary_storage': self.temporary_comment_public,
+        }.get(category, False)
+
+    def can_public_reaction(self, category):
+        return {
+            'immediate_trash': self.archive_reaction_public,
+            'immediate_exhibition': self.exhibition_reaction_public,
+            'temporary_storage': self.temporary_reaction_public,
+        }.get(category, False)
 
 
 class Purchase(models.Model):

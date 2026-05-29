@@ -87,6 +87,18 @@ class CommentForm(forms.ModelForm):
         }
 
 
+class GuestCommentForm(forms.Form):
+    nickname = forms.CharField(
+        max_length=50,
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': '닉네임'}),
+        label='닉네임',
+    )
+    text = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-textarea', 'rows': 3, 'placeholder': '댓글을 입력하세요'}),
+        label='',
+    )
+
+
 class PasswordVerifyForm(forms.Form):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': '설정한 비밀번호를 입력하세요'}),

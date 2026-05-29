@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from accounts.models import Notification
 from .models import Content, Comment, Reaction, Vote, Wishlist, Purchase, SiteConfig
-from .forms import ContentForm, ContentEditForm, CommentForm, PasswordVerifyForm
+from .forms import ContentForm, ContentEditForm, CommentForm, GuestCommentForm, PasswordVerifyForm
 
 
 def _notify_vote_milestone(content):
@@ -112,23 +112,41 @@ def exhibition(request):
 
 def detail(request, pk):
     content = get_object_or_404(Content, pk=pk, status='approved')
+    config = SiteConfig.get()
+    comments = content.comments.select_related('author').all()
 
     if not request.user.is_authenticated:
-        return render(request, 'contents/detail_guest.html', {'content': content})
+        if not config.can_public_read(content.category):
+            return render(request, 'contents/detail_guest.html', {'content': content})
 
-    comments = content.comments.select_related('author').all()
-    comment_form = CommentForm()
+        can_comment = config.can_public_comment(content.category)
+        can_react = config.can_public_reaction(content.category)
+        can_wishlist = config.exhibition_wishlist_public
+
+        guest_reactions = request.session.get('guest_reactions', {})
+        session_reactions = set(guest_reactions.get(str(pk), []))
+
+        return render(request, 'contents/detail.html', {
+            'content': content,
+            'comments': comments,
+            'comment_form': None,
+            'guest_comment_form': GuestCommentForm() if can_comment else None,
+            'user_reactions': session_reactions,
+            'user_vote': None,
+            'user_wishlisted': False,
+            'has_jury_summon': False,
+            'can_comment': can_comment,
+            'can_react': can_react,
+            'can_wishlist': can_wishlist,
+            'is_guest': True,
+        })
 
     user_reactions = set(
-        Reaction.objects.filter(
-            content=content, user=request.user
-        ).values_list('reaction_type', flat=True)
+        Reaction.objects.filter(content=content, user=request.user).values_list('reaction_type', flat=True)
     )
     vote = Vote.objects.filter(content=content, user=request.user).first()
     user_vote = vote.vote_type if vote else None
     user_wishlisted = Wishlist.objects.filter(content=content, user=request.user).exists()
-
-    # 상점 아이템 보유 여부
     has_jury_summon = Purchase.objects.filter(
         user=request.user, item_type='jury_summon', used=False
     ).exists() if content.category == 'temporary_storage' else False
@@ -136,37 +154,48 @@ def detail(request, pk):
     return render(request, 'contents/detail.html', {
         'content': content,
         'comments': comments,
-        'comment_form': comment_form,
+        'comment_form': CommentForm(),
+        'guest_comment_form': None,
         'user_reactions': user_reactions,
         'user_vote': user_vote,
         'user_wishlisted': user_wishlisted,
         'has_jury_summon': has_jury_summon,
+        'can_comment': True,
+        'can_react': True,
+        'can_wishlist': True,
+        'is_guest': False,
     })
 
 
-@login_required
 def create(request):
+    config = SiteConfig.get()
+    if not request.user.is_authenticated and not config.write_public:
+        messages.error(request, '로그인 후 이용할 수 있습니다.')
+        return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+
     if request.method == 'POST':
         form = ContentForm(request.POST, request.FILES)
         if form.is_valid():
             content = form.save(commit=False)
             content.set_password(form.cleaned_data['password'])
-            content.author = request.user
+            if request.user.is_authenticated:
+                content.author = request.user
             content.author_email = form.cleaned_data.get('author_email', '')
-            config = SiteConfig.get()
             if config.user_needs_approval(request.user):
                 content.status = 'pending'
                 msg = '해방일지가 등록되었습니다! 관리자 승인 후 아카이브에 공개됩니다.'
             else:
                 content.status = 'approved'
                 msg = '해방일지가 등록되었습니다!'
-                request.user.add_points('upload')
+                if request.user.is_authenticated:
+                    request.user.add_points('upload')
             content.save()
             messages.success(request, msg)
             return redirect('home')
     else:
         form = ContentForm()
-        form.fields['nickname'].initial = request.user.username
+        if request.user.is_authenticated:
+            form.fields['nickname'].initial = request.user.username
 
     return render(request, 'contents/create.html', {
         'form': form,
@@ -215,28 +244,62 @@ def edit(request, pk):
     return render(request, 'contents/edit.html', {'form': form, 'content': content})
 
 
-@login_required
 @require_POST
 def add_comment(request, pk):
     content = get_object_or_404(Content, pk=pk, status='approved')
-    form = CommentForm(request.POST)
-    if form.is_valid():
-        comment = form.save(commit=False)
-        comment.content = content
-        comment.author = request.user
-        comment.save()
-        request.user.add_points('comment')
+    config = SiteConfig.get()
+
+    if not request.user.is_authenticated:
+        if not config.can_public_comment(content.category):
+            messages.error(request, '로그인 후 댓글을 남길 수 있습니다.')
+            return redirect(f"{settings.LOGIN_URL}?next=/content/{pk}/")
+        form = GuestCommentForm(request.POST)
+        if form.is_valid():
+            Comment.objects.create(
+                content=content,
+                author=None,
+                guest_nickname=form.cleaned_data['nickname'],
+                text=form.cleaned_data['text'],
+            )
+    else:
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.content = content
+            comment.author = request.user
+            comment.save()
+            request.user.add_points('comment')
     return redirect('detail', pk=pk)
 
 
-@login_required
 @require_POST
 def toggle_reaction(request, pk):
     content = get_object_or_404(Content, pk=pk, status='approved')
+    config = SiteConfig.get()
     reaction_type = request.POST.get('reaction_type')
 
     if reaction_type not in ['empathy', 'sad', 'angry']:
         return JsonResponse({'error': '잘못된 반응 유형'}, status=400)
+
+    if not request.user.is_authenticated:
+        if not config.can_public_reaction(content.category):
+            return JsonResponse({'error': '로그인이 필요합니다.'}, status=403)
+        guest_reactions = request.session.get('guest_reactions', {})
+        pk_str = str(pk)
+        section = guest_reactions.setdefault(pk_str, [])
+        if reaction_type in section:
+            section.remove(reaction_type)
+            active = False
+        else:
+            section.append(reaction_type)
+            active = True
+        request.session['guest_reactions'] = guest_reactions
+        request.session.modified = True
+        return JsonResponse({
+            'active': active,
+            'reaction_type': reaction_type,
+            'counts': {'empathy': content.empathy_count, 'sad': content.sad_count, 'angry': content.angry_count},
+        })
 
     reaction, created = Reaction.objects.get_or_create(
         content=content, user=request.user, reaction_type=reaction_type
