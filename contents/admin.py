@@ -90,6 +90,8 @@ class SiteConfigAdmin(admin.ModelAdmin):
     )
 
     def quick_toggle_buttons(self, obj):
+        if obj is None or obj.pk is None:
+            return '저장 후 사용 가능합니다.'
         allow_url = reverse('admin:siteconfig_allow_all', args=[obj.pk])
         disallow_url = reverse('admin:siteconfig_disallow_all', args=[obj.pk])
         return format_html(
